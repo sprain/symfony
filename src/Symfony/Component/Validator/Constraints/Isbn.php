@@ -18,28 +18,43 @@ use Symfony\Component\Validator\Exception\MissingOptionsException;
  * @Annotation
  *
  * @author The Whole Life To Learn <thewholelifetolearn@gmail.com>
+ * @author Manuel Reinhard <manu@sprain.ch>
+ *
+ * @api
  */
 class Isbn extends Constraint
 {
-    public $isbn10Message = 'This value is not a valid ISBN-10.';
-    public $isbn13Message = 'This value is not a valid ISBN-13.';
+    public $isbn10Message   = 'This value is not a valid ISBN-10.';
+    public $isbn13Message   = 'This value is not a valid ISBN-13.';
     public $bothIsbnMessage = 'This value is neither a valid ISBN-10 nor a valid ISBN-13.';
-    public $isbn10;
-    public $isbn13;
+    public $type;
+    public $message;
 
+    /**
+     * @deprecated will be removed in Symfony 2.5 - use type option instead
+     * @var bool
+     */
+    public $isbn10 = false;
+
+    /**
+     * @deprecated will be removed in Symfony 2.5 - use type option instead
+     * @var bool
+     */
+    public $isbn13 = false;
+
+    /**
+     * {@inheritDoc}
+     */
     public function __construct($options = null)
     {
-        if (null !== $options && !is_array($options)) {
-            $options = array(
-                'isbn10' => $options,
-                'isbn13' => $options,
-            );
-        }
-
         parent::__construct($options);
+    }
 
-        if (null === $this->isbn10 && null === $this->isbn13) {
-            throw new MissingOptionsException(sprintf('Either option "isbn10" or "isbn13" must be given for constraint "%s".', __CLASS__), array('isbn10', 'isbn13'));
-        }
+    /**
+     * {@inheritDoc}
+     */
+    public function getDefaultOption()
+    {
+        return 'type';
     }
 }

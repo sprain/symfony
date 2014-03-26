@@ -44,6 +44,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
             array('0321812700'),
             array('0-45122-5244'),
             array('0-4712-92311'),
+            array('0-9752298-0-X')
         );
     }
 
@@ -58,6 +59,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
             array('0-4X19-92611'),
             array('0_45122_5244'),
             array('2870#971#648'),
+            array('0-9752298-0-x')
         );
     }
 
@@ -145,7 +147,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testValidIsbn10($isbn)
     {
-        $constraint = new Isbn(array('isbn10' => true));
+        $constraint = new Isbn(array('type' => 'isbn10'));
         $this->context
             ->expects($this->never())
             ->method('addViolation');
@@ -158,7 +160,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidIsbn10($isbn)
     {
-        $constraint = new Isbn(array('isbn10' => true));
+        $constraint = new Isbn(array('type' => 'isbn10'));
         $this->context
             ->expects($this->once())
             ->method('addViolation')
@@ -172,7 +174,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testValidIsbn13($isbn)
     {
-        $constraint = new Isbn(array('isbn13' => true));
+        $constraint = new Isbn(array('type' => 'isbn13'));
         $this->context
             ->expects($this->never())
             ->method('addViolation');
@@ -185,7 +187,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidIsbn13($isbn)
     {
-        $constraint = new Isbn(array('isbn13' => true));
+        $constraint = new Isbn(array('type' => 'isbn13'));
         $this->context
             ->expects($this->once())
             ->method('addViolation')
@@ -199,7 +201,7 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testValidIsbn($isbn)
     {
-        $constraint = new Isbn(array('isbn10' => true, 'isbn13' => true));
+        $constraint = new Isbn();
         $this->context
             ->expects($this->never())
             ->method('addViolation');
@@ -212,11 +214,179 @@ class IsbnValidatorTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidIsbn($isbn)
     {
+        $constraint = new Isbn();
+        $this->context
+            ->expects($this->once())
+            ->method('addViolation')
+            ->with($constraint->bothIsbnMessage);
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+
+    /* BELOW ARE TESTS FOR OLD OPTIONS, TO AVOID BC BREAK */
+
+    public function getInvalidIsbn10Old()
+    {
+        return array(
+            array('1234567890'),
+            array('987'),
+            array('0987656789'),
+            array(0),
+            array('7-35622-5444'),
+            array('0-4X19-92611'),
+            array('0_45122_5244'),
+            array('2870#971#648'),
+        );
+    }
+
+    public function testNullIsValidOld()
+    {
+        $constraint = new Isbn(true);
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate(null, $constraint);
+    }
+
+    public function testEmptyStringIsValidOld()
+    {
+        $constraint = new Isbn(true);
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate('', $constraint);
+    }
+
+    /**
+     * @expectedException \Symfony\Component\Validator\Exception\UnexpectedTypeException
+     */
+    public function testExpectsStringCompatibleTypeOld()
+    {
+        $constraint = new Isbn(true);
+        $this->validator->validate(new \stdClass(), $constraint);
+    }
+
+    /**
+     * @dataProvider getValidIsbn10
+     */
+    public function testValidIsbn10Old($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => true));
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getInvalidIsbn10Old
+     */
+    public function testInvalidIsbn10Old($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => true));
+        $this->context
+            ->expects($this->once())
+            ->method('addViolation')
+            ->with($constraint->isbn10Message);
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getValidIsbn13
+     */
+    public function testValidIsbn13Old($isbn)
+    {
+        $constraint = new Isbn(array('isbn13' => true));
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getInvalidIsbn13
+     */
+    public function testInvalidIsbn13Old($isbn)
+    {
+        $constraint = new Isbn(array('isbn13' => true));
+        $this->context
+            ->expects($this->once())
+            ->method('addViolation')
+            ->with($constraint->isbn13Message);
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getValidIsbn
+     */
+    public function testValidIsbnOld($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => true, 'isbn13' => true));
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getInvalidIsbn
+     */
+    public function testInvalidIsbnOld($isbn)
+    {
         $constraint = new Isbn(array('isbn10' => true, 'isbn13' => true));
         $this->context
             ->expects($this->once())
             ->method('addViolation')
             ->with($constraint->bothIsbnMessage);
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getValidIsbn13
+     */
+    public function testValidIsbn13MixingNewAndOld($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => true, 'isbn13' => true, 'type' => 'isbn13'));
+        $this->context
+            ->expects($this->never())
+            ->method('addViolation');
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getInvalidIsbn13
+     */
+    public function testInvalidIsbn13MixingNewAndOld($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => true, 'isbn13' => false, 'type' => 'isbn13'));
+        $this->context
+            ->expects($this->once())
+            ->method('addViolation')
+            ->with($constraint->isbn13Message);
+
+        $this->validator->validate($isbn, $constraint);
+    }
+
+    /**
+     * @dataProvider getInvalidIsbn10
+     */
+    public function testInvalidIsbn10MixingNewAndOld($isbn)
+    {
+        $constraint = new Isbn(array('isbn10' => false, 'isbn13' => true, 'type' => 'isbn10'));
+        $this->context
+            ->expects($this->once())
+            ->method('addViolation')
+            ->with($constraint->isbn10Message);
 
         $this->validator->validate($isbn, $constraint);
     }
